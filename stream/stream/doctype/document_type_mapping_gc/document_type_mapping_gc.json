@@ -44,11 +44,11 @@
    "fieldname": "field_mapping",
    "fieldtype": "Table",
    "label": "Field Mapping",
-   "options": "Document Type Field Mapping"
+   "options": "Document Type Field Mapping GC"
   }
  ],
  "links": [],
- "modified": "2025-10-16 09:12:50.349985",
+ "modified": "2025-10-16 15:16:54.228681",
  "modified_by": "Administrator",
  "module": "Stream",
  "name": "Document Type Mapping GC",

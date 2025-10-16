@@ -21,7 +21,7 @@
    "fieldname": "consumer_doctypes",
    "fieldtype": "Table",
    "label": "Event Consumer Document Types",
-   "options": "Event Consumer Document Type",
+   "options": "Event Consumer Document Type GC",
    "reqd": 1
   },
   {
@@ -72,7 +72,7 @@
  ],
  "in_create": 1,
  "links": [],
- "modified": "2025-10-16 09:06:33.421393",
+ "modified": "2025-10-16 15:16:11.659043",
  "modified_by": "Administrator",
  "module": "Stream",
  "name": "Event Consumer GC",

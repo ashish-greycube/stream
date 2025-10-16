@@ -29,7 +29,7 @@
    "fieldname": "producer_doctypes",
    "fieldtype": "Table",
    "label": "Event Producer Document Types",
-   "options": "Event Producer Document Type",
+   "options": "Event Producer Document Type GC",
    "reqd": 1
   },
   {
@@ -71,7 +71,7 @@
   }
  ],
  "links": [],
- "modified": "2025-10-16 09:05:31.586040",
+ "modified": "2025-10-16 15:19:09.337862",
  "modified_by": "Administrator",
  "module": "Stream",
  "name": "Event Producer GC",
