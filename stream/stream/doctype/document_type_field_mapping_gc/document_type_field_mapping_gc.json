@@ -33,7 +33,7 @@
    "fieldname": "mapping",
    "fieldtype": "Link",
    "label": "Mapping",
-   "options": "Document Type Mapping"
+   "options": "Document Type Mapping GC"
   },
   {
    "depends_on": "eval:doc.mapping_type==\"Document\";",
@@ -61,7 +61,7 @@
  ],
  "istable": 1,
  "links": [],
- "modified": "2025-10-16 09:13:17.627132",
+ "modified": "2025-10-17 13:48:51.935744",
  "modified_by": "Administrator",
  "module": "Stream",
  "name": "Document Type Field Mapping GC",
