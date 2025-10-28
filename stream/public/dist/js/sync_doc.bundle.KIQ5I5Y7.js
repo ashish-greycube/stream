@@ -11,9 +11,9 @@
           frappe.call({
             method: "stream.stream.doctype.event_update_log_gc.event_update_log_gc.notify_consumers",
             args: {
-              doctype: frm.doc.doctype,
-              docname: frm.doc.name,
-              event: "sycn"
+              doc: frm.doc,
+              event: "sycn",
+              sync_type: "sync"
             },
             callback: function(r) {
               console.log(r);
@@ -24,4 +24,4 @@
     }
   });
 })();
-//# sourceMappingURL=sync_doc.bundle.PZPVIHO5.js.map
+//# sourceMappingURL=sync_doc.bundle.KIQ5I5Y7.js.map
