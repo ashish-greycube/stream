@@ -12,6 +12,7 @@ from frappe.frappeclient import FrappeClient
 from frappe.model.document import Document
 from frappe.utils.background_jobs import get_jobs
 from frappe.utils.data import get_url
+from frappe.custom.doctype.custom_field.custom_field import create_custom_field
 
 class EventConsumerGC(Document):
 	def validate(self):
@@ -28,6 +29,7 @@ class EventConsumerGC(Document):
 				return
 
 			self.update_consumer_status()
+			self.create_custom_fields()
 		else:
 			frappe.db.set_value(self.doctype, self.name, "incoming_change", 0)
 
@@ -72,6 +74,23 @@ class EventConsumerGC(Document):
 		if response.status_code != 200:
 			return "offline"
 		return "online"
+	
+	def create_custom_fields(self):
+		"""create custom field to store remote docname and remote site url"""
+		for entry in self.consumer_doctypes:
+			if entry.status == "Approved":
+				if not frappe.db.exists(
+						"Custom Field", {"fieldname": "custom_payment_type", "dt": entry.ref_doctype}
+					):
+						df = dict(
+							fieldname="custom_payment_type",
+							label="Payment Type",
+							fieldtype="Select",
+							options="\nBank\nCash",
+							read_only=0,
+							print_hide=1,
+						)
+						create_custom_field(entry.ref_doctype, df)
 
 
 @frappe.whitelist()

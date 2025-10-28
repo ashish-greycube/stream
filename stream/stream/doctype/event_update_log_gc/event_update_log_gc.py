@@ -17,10 +17,14 @@ class EventUpdateLogGC(Document):
 		if not jobs or enqueued_method not in jobs[frappe.local.site]:
 			frappe.enqueue(enqueued_method, doctype=self.ref_doctype, queue="long", enqueue_after_commit=True)
 
-
-def notify_consumers(doc, event):
+@frappe.whitelist()
+def notify_consumers(doc, event, sync_type=None):
 	"""called via hooks"""
 	# make event update log for doctypes having event consumers
+
+	if isinstance(doc, str):
+		doc = frappe.get_doc("Event Consumer GC", doc)
+
 	if frappe.flags.in_install or frappe.flags.in_migrate:
 		return
 
@@ -38,6 +42,8 @@ def notify_consumers(doc, event):
 					doc.diff = diff
 					make_event_update_log(doc, update_type="Update")
 
+	if sync_type == "sync":
+		frappe.msgprint("Event Update Log GC created for {0}. Please check Event Update Log GC".format(doc.name))
 
 ENABLED_DOCTYPES_CACHE_KEY = "event_streaming_enabled_doctypes"
 

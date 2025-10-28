@@ -160,6 +160,20 @@ class EventProducerGC(Document):
 						print_hide=1,
 					)
 					create_custom_field(entry.ref_doctype, df)
+			
+			if not frappe.db.exists(
+					"Custom Field", {"fieldname": "custom_payment_type", "dt": entry.ref_doctype}
+				):
+					df = dict(
+						fieldname="custom_payment_type",
+						label="Payment Type",
+						fieldtype="Select",
+						options="\nBank\nCash",
+						hidden=1,
+						read_only=1,
+						print_hide=1,
+					)
+					create_custom_field(entry.ref_doctype, df)
 
 	def update_event_consumer(self):
 		if self.is_producer_online():
