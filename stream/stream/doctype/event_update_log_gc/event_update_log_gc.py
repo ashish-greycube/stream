@@ -28,42 +28,59 @@ def sync_from_button(doc):
 	print("==============",type(doc),doc.doctype,doc.name)
 	if frappe.flags.in_install or frappe.flags.in_migrate:
 		return
-
-	headers = {
-		"Accept": "application/json",
-   		"Content-Type": "application/json",
-        "Authorization": "token 7b8a17acade7ef0:e07b0667a2fb738"
-        }
 	
 	if check_doctype_has_consumers(doc.doctype):
-		print("https://govtclean.greycube.in/api/resource/{0}/{1}".format(doc.doctype,doc.docname),"---------------------")
-		response = requests.get("https://govtclean.greycube.in/api/resource/{0}/{1}".format(doc.doctype,doc.name), headers=headers)
-		print(response.status_code)
-		print(response.json())
 
-		if response.status_code == 200:
-			old_data = response.json().get("data")
-			doc = frappe.get_doc(doc.doctype, doc.name)	
-			print(doc.meta.fields)
-			new_data = doc
-			print(type(old_data),type(new_data),"++++++++++++++")
-			if not doc.flags.event_update_log:
-				diff = get_update(old_data, new_data)
-				if diff:
-					doc.diff = diff
-					make_event_update_log(doc, update_type="Update")
-		
-		if response.status_code == 404:
-			doc.flags.event_update_log = make_event_update_log(doc, update_type="Create")
+		event_consumer_details = frappe.get_all(
+			"Event Consumer Document Type GC",
+			filters={"ref_doctype": doc.doctype, "status": "Approved", "unsubscribed": 0},
+			ignore_ddl=True,
+			fields=["name","parent"]
+		)
+		if len(event_consumer_details)>0:
+			for detail in event_consumer_details:
+				site_url = detail.parent
+				print(site_url,"------------------------------------------")
 
-@frappe.whitelist()
-def notify_consumers(doc, event, sync_type=None):
+				api_key = frappe.db.get_value("Event Consumer GC",
+											  {"name":detail.parent},
+											  "api_key")
+				
+				generated_secret = frappe.utils.password.get_decrypted_password(
+				"Event Consumer GC", detail.parent, fieldname="api_secret"
+				)
+				
+				headers = {
+					"Accept": "application/json",
+					"Content-Type": "application/json",
+					"Authorization": "token {0}:{1}".format(api_key,generated_secret)
+					}
+				
+				response = requests.get("{0}/api/resource/{1}/{2}".format(site_url,doc.doctype,doc.name), headers=headers)
+				print(response.status_code)
+				print(response.json())
+
+				if response.status_code == 200:
+					old_data = response.json().get("data")
+					doc = frappe.get_doc(doc.doctype, doc.name)	
+					print(doc.meta.fields)
+					new_data = doc
+					print(type(old_data),type(new_data),"++++++++++++++")
+					if not doc.flags.event_update_log:
+						diff = get_update(old_data, new_data)
+						if diff:
+							doc.diff = diff
+							make_event_update_log(doc, update_type="Update")
+				
+				if response.status_code == 404:
+					doc = frappe.get_doc(doc.doctype, doc.name)
+					doc.flags.event_update_log = make_event_update_log(doc, update_type="Create")
+
+				frappe.msgprint("{0} {1} is created/updated on {2}".format(doc.doctype,doc.name,site_url),alert=True)
+
+def notify_consumers(doc, event):
 	"""called via hooks"""
 	# make event update log for doctypes having event consumers
-
-	if isinstance(doc, str):
-		doc = frappe.parse_json(doc)
-
 	if frappe.flags.in_install or frappe.flags.in_migrate:
 		return
 
@@ -81,8 +98,6 @@ def notify_consumers(doc, event, sync_type=None):
 					doc.diff = diff
 					make_event_update_log(doc, update_type="Update")
 
-	if sync_type == "sync":
-		frappe.msgprint("Event Update Log GC created for {0}. Please check Event Update Log GC".format(doc.name))
 
 ENABLED_DOCTYPES_CACHE_KEY = "event_streaming_enabled_doctypes"
 
