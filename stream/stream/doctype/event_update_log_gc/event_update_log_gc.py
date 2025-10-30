@@ -2,6 +2,8 @@
 # For license information, please see license.txt
 
 import frappe
+import requests
+from frappe import _
 from frappe.model import no_value_fields, table_fields
 from frappe.model.document import Document
 from frappe.utils.background_jobs import get_jobs
@@ -18,12 +20,49 @@ class EventUpdateLogGC(Document):
 			frappe.enqueue(enqueued_method, doctype=self.ref_doctype, queue="long", enqueue_after_commit=True)
 
 @frappe.whitelist()
+def sync_from_button(doc):
+	"""called via button"""
+	if isinstance(doc, str):
+		doc = frappe.parse_json(doc)
+
+	print("==============",type(doc),doc.doctype,doc.name)
+	if frappe.flags.in_install or frappe.flags.in_migrate:
+		return
+
+	headers = {
+		"Accept": "application/json",
+   		"Content-Type": "application/json",
+        "Authorization": "token 7b8a17acade7ef0:e07b0667a2fb738"
+        }
+	
+	if check_doctype_has_consumers(doc.doctype):
+		print("https://govtclean.greycube.in/api/resource/{0}/{1}".format(doc.doctype,doc.docname),"---------------------")
+		response = requests.get("https://govtclean.greycube.in/api/resource/{0}/{1}".format(doc.doctype,doc.name), headers=headers)
+		print(response.status_code)
+		print(response.json())
+
+		if response.status_code == 200:
+			old_data = response.json().get("data")
+			doc = frappe.get_doc(doc.doctype, doc.name)	
+			print(doc.meta.fields)
+			new_data = doc
+			print(type(old_data),type(new_data),"++++++++++++++")
+			if not doc.flags.event_update_log:
+				diff = get_update(old_data, new_data)
+				if diff:
+					doc.diff = diff
+					make_event_update_log(doc, update_type="Update")
+		
+		if response.status_code == 404:
+			doc.flags.event_update_log = make_event_update_log(doc, update_type="Create")
+
+@frappe.whitelist()
 def notify_consumers(doc, event, sync_type=None):
 	"""called via hooks"""
 	# make event update log for doctypes having event consumers
 
 	if isinstance(doc, str):
-		doc = frappe.get_doc("Event Consumer GC", doc)
+		doc = frappe.parse_json(doc)
 
 	if frappe.flags.in_install or frappe.flags.in_migrate:
 		return
@@ -79,14 +118,14 @@ def get_update(old, new, for_child=False):
 	"""
 	if not new:
 		return None
-
+	print(type(old),type(new),"++++++++++++++")
 	out = frappe._dict(changed={}, added={}, removed={}, row_changed={})
 	for df in new.meta.fields:
 		if df.fieldtype in no_value_fields and df.fieldtype not in table_fields:
 			continue
 
 		old_value, new_value = old.get(df.fieldname), new.get(df.fieldname)
-
+		print(type(old_value),type(new_value),"<<<<<<<<<<<<<",df.fieldname)
 		if df.fieldtype in table_fields:
 			old_row_by_name, new_row_by_name = make_maps(old_value, new_value)
 			out = check_for_additions(out, df, new_value, old_row_by_name)
@@ -122,10 +161,12 @@ def make_event_update_log(doc, update_type):
 def make_maps(old_value, new_value):
 	"""make maps"""
 	old_row_by_name, new_row_by_name = {}, {}
+	print(old_value,new_value,"==================",type(old_value),type(new_value))
 	for d in old_value:
-		old_row_by_name[d.name] = d
+		print(d.get("name"),"<<<<<<<<<<<<<")
+		old_row_by_name[d.get("name")] = d
 	for d in new_value:
-		new_row_by_name[d.name] = d
+		new_row_by_name[d.get("name")] = d
 	return old_row_by_name, new_row_by_name
 
 
@@ -149,17 +190,17 @@ def check_for_additions(out, df, new_value, old_row_by_name):
 def check_for_deletions(out, df, old_value, new_row_by_name):
 	"""check for deletions"""
 	for d in old_value:
-		if d.name not in new_row_by_name:
+		if d.get("name") not in new_row_by_name:
 			if not out.removed.get(df.fieldname):
 				out.removed[df.fieldname] = []
-			out.removed[df.fieldname].append(d.name)
+			out.removed[df.fieldname].append(d.get("name"))
 	return out
 
 
 def check_docstatus(out, old, new, for_child):
 	"""docstatus changes"""
-	if not for_child and old.docstatus != new.docstatus:
-		out.changed["docstatus"] = new.docstatus
+	if not for_child and old.get("docstatus") != new.get("docstatus"):
+		out.changed["docstatus"] = new.get("docstatus")
 	return out
 
 
