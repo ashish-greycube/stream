@@ -124,6 +124,9 @@ doc_events = {
 		"on_update": [
 			"stream.stream.doctype.event_update_log_gc.event_update_log_gc.notify_consumers"
 		],
+        "on_update_after_submit": [
+			"stream.stream.doctype.event_update_log_gc.event_update_log_gc.notify_consumers"
+		],
 		"on_cancel": [
 			"stream.stream.doctype.event_update_log_gc.event_update_log_gc.notify_consumers"
 		],

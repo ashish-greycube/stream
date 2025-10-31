@@ -179,6 +179,40 @@ class EventProducerGC(Document):
 					)
 					create_custom_field(entry.ref_doctype, df)
 
+			if not frappe.db.exists(
+					"Custom Field", {"fieldname": "custom_gov_creation", "dt": entry.ref_doctype}
+				):
+					df = dict(
+						fieldname="custom_gov_creation",
+						label="Gov Creation",
+						fieldtype="Datetime",
+						hidden=1,
+						read_only=1,
+						print_hide=1,
+						allow_on_submit=1,
+						is_custom_field=1,
+						is_system_generated=0,
+						no_copy=1
+					)
+					create_custom_field(entry.ref_doctype, df)
+
+			if not frappe.db.exists(
+					"Custom Field", {"fieldname": "custom_gov_modified", "dt": entry.ref_doctype}
+				):
+					df = dict(
+						fieldname="custom_gov_modified",
+						label="Gov Modified",
+						fieldtype="Datetime",
+						hidden=1,
+						read_only=1,
+						print_hide=1,
+						allow_on_submit=1,
+						is_custom_field=1,
+						is_system_generated=0,
+						no_copy=1
+					)
+					create_custom_field(entry.ref_doctype, df)
+
 	def update_event_consumer(self):
 		if self.is_producer_online():
 			producer_site = get_producer_site(self.producer_url)
@@ -296,14 +330,16 @@ def sync(update, producer_site, event_producer, in_retry=False):
 	"""Sync the individual update"""
 	try:
 		if update.update_type == "Create":
-			set_insert(update, producer_site, event_producer.name)
+			creation_details = set_insert(update, producer_site, event_producer.name)
 		if update.update_type == "Update":
-			set_update(update, producer_site)
+			creation_details = set_update(update, producer_site)
 		if update.update_type == "Delete":
 			set_delete(update)
 		if in_retry:
 			return "Synced"
 		log_event_sync(update, event_producer.name, "Synced")
+		frappe.db.set_value(update.ref_doctype,update.docname,"custom_gov_creation",creation_details.creation)
+		frappe.db.set_value(update.ref_doctype,update.docname,"custom_gov_modified",creation_details.modified)
 
 	except Exception:
 		if in_retry:
@@ -340,6 +376,10 @@ def set_insert(update, producer_site, event_producer):
 		doc.remote_site_name = event_producer
 		doc.insert(set_child_names=False)
 
+	return {
+		"creation" : doc.creation,
+		"modified" : doc.modified
+	}
 
 def set_update(update, producer_site):
 	"""Sync update type update"""
@@ -366,6 +406,11 @@ def set_update(update, producer_site):
 
 		local_doc.save()
 		local_doc.db_update_all()
+	
+	return {
+		"creation" : local_doc.creation,
+		"modified" : local_doc.modified
+	}
 
 
 def update_row_removed(local_doc, removed):

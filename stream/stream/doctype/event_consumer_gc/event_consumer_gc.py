@@ -95,6 +95,38 @@ class EventConsumerGC(Document):
 							no_copy=1
 						)
 						create_custom_field(entry.ref_doctype, df)
+				
+				if not frappe.db.exists(
+					"Custom Field", {"fieldname": "custom_gov_creation", "dt": entry.ref_doctype}
+				):
+					df = dict(
+						fieldname="custom_gov_creation",
+						label="Gov Creation",
+						fieldtype="Datetime",
+						read_only=1,
+						print_hide=1,
+						allow_on_submit=1,
+						is_custom_field=1,
+						is_system_generated=0,
+						no_copy=1
+					)
+					create_custom_field(entry.ref_doctype, df)
+
+				if not frappe.db.exists(
+						"Custom Field", {"fieldname": "custom_gov_modified", "dt": entry.ref_doctype}
+					):
+						df = dict(
+							fieldname="custom_gov_modified",
+							label="Gov Modified",
+							fieldtype="Datetime",
+							read_only=1,
+							print_hide=1,
+							allow_on_submit=1,
+							is_custom_field=1,
+							is_system_generated=0,
+							no_copy=1
+						)
+						create_custom_field(entry.ref_doctype, df)
 
 
 @frappe.whitelist()
