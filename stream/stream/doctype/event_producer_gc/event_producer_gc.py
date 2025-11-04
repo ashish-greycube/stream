@@ -339,18 +339,19 @@ def sync(update, producer_site, event_producer, in_retry=False):
 			return "Synced"
 		log_event_sync(update, event_producer.name, "Synced")
 		print(producer_site, producer_site.url,"==================")
-		url ="{0}/api/resource/{1}/{2}".format(producer_site.url,update.ref_doctype,update.docname)
-		headers = {
-			"Accept": "application/json",
-			"Content-Type": "application/json",
-			"Authorization": "token {0}:{1}".format(event_producer.api_key,event_producer.get_password('api_secret'))
-		}
-		payload = {
-			"custom_gov_creation": creation_details.creation,
-			"custom_gov_modified": creation_details.modified
-		}
-		response = requests.put(url, headers=headers, json=payload)
-		frappe.log_error(title="Stream : update",message="{0}-----{1}".format(response.status_code,response.text))
+		if update.update_type in ["Create","Update"]:
+			url ="{0}/api/resource/{1}/{2}".format(producer_site.url,update.ref_doctype,update.docname)
+			headers = {
+				"Accept": "application/json",
+				"Content-Type": "application/json",
+				"Authorization": "token {0}:{1}".format(event_producer.api_key,event_producer.get_password('api_secret'))
+			}
+			payload = {
+				"custom_gov_creation":"{0}".format(creation_details.get("creation")),
+				"custom_gov_modified":"{0}".format(creation_details.get("modified"))
+			}
+			response = requests.put(url, headers=headers, json=payload)
+			frappe.log_error(title="Stream : update",message="{0}-----{1}".format(response.status_code,response.text))
 		# frappe.db.set_value(update.ref_doctype,update.docname,"custom_gov_creation",creation_details.creation)
 		# frappe.db.set_value(update.ref_doctype,update.docname,"custom_gov_modified",creation_details.modified)
 
