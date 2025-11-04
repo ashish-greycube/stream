@@ -4,7 +4,7 @@ import requests
 from stream.stream.doctype.event_update_log_gc.event_update_log_gc import check_doctype_has_consumers
 
 def copy_creation_of_consumer_site(doc, method):
-    print("*"*100)
+    # print("*"*100)
     is_producer_site = check_if_producer_site()
     if is_producer_site == True:
         # if check_doctype_has_consumers(doc.doctype):
@@ -32,7 +32,7 @@ def copy_creation_of_consumer_site(doc, method):
                         "Content-Type": "application/json",
                         "Authorization": "token {0}:{1}".format(api_key,generated_secret)
                         }
-                    response = requests.get('{0}/api/resource/{1}?fields=["name","creation","modified"]&filters=[["name","=","{2}"]]'.format(site_url,doc.doctype,"ACC-SINV-202501375"), headers=headers)
+                    response = requests.get('{0}/api/resource/{1}?fields=["name","creation","modified"]&filters=[["name","=","{2}"]]'.format(site_url,doc.doctype,doc.name), headers=headers)
                     print(response.status_code)
                     print(response.json())
                     if len(response.json().get("data"))>0:
