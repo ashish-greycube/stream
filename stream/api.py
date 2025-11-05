@@ -1,7 +1,7 @@
 import frappe
 from frappe import _
 import requests
-from stream.stream.doctype.event_update_log_gc.event_update_log_gc import check_doctype_has_consumers
+# from stream.stream.doctype.event_update_log_gc.event_update_log_gc import check_doctype_has_consumers
 
 def copy_creation_of_consumer_site(doc, method):
     # print("*"*100)

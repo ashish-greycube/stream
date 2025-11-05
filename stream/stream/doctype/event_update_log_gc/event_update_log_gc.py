@@ -7,6 +7,7 @@ from frappe import _
 from frappe.model import no_value_fields, table_fields
 from frappe.model.document import Document
 from frappe.utils.background_jobs import get_jobs
+from stream.api import copy_creation_of_consumer_site
 
 class EventUpdateLogGC(Document):
 	def after_insert(self):
@@ -76,7 +77,8 @@ def sync_from_button(doc):
 					doc = frappe.get_doc(doc.doctype, doc.name)
 					doc.flags.event_update_log = make_event_update_log(doc, update_type="Create")
 
-				frappe.msgprint("{0} {1} is created/updated on {2}".format(doc.doctype,doc.name,site_url),alert=True)
+				copy_creation_of_consumer_site(doc, None)
+				frappe.msgprint("Event Update Log is Created. Please check Event Sync Log on Consumer site.",alert=True)
 
 def notify_consumers(doc, event):
 	"""called via hooks"""
