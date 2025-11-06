@@ -1,0 +1,7 @@
+{
+  "version": 3,
+  "sources": ["../../../../../apps/stream/stream/public/js/sync_doc.bundle.js"],
+  "sourcesContent": ["$(document).on(\"form-refresh\", function (event, frm) {\n    console.log(\"=====Sync======\")\n    if (frappe.meta.has_field(frm.doc.doctype, \"custom_payment_type\") ) {\n        console.log(\"--------has field-----------\")\n        if (\n            frm.is_new() == undefined\n        ) {\n            console.log(\"Inside IFFF\")\n            frm.add_custom_button(__(\"Sync\"), function() {\n                console.log(\"Sync\")\n                frappe.call({\n                    method: \"stream.api.sync_from_button\",\n                    args: {\n                        doc: frm.doc\n                    },\n                    callback: function (r) {\n                        console.log(r)\n                    }\t\n                })\t\n            })\n        }\n    }\n});"],
+  "mappings": "MAAA,EAAE,QAAQ,EAAE,GAAG,eAAgB,SAAU,EAAO,EAAK,CACjD,QAAQ,IAAI,iBAAiB,EACzB,OAAO,KAAK,UAAU,EAAI,IAAI,QAAS,qBAAqB,GAC5D,SAAQ,IAAI,8BAA8B,EAEtC,EAAI,OAAO,GAAK,MAEhB,SAAQ,IAAI,aAAa,EACzB,EAAI,kBAAkB,GAAG,MAAM,EAAG,UAAW,CACzC,QAAQ,IAAI,MAAM,EAClB,OAAO,KAAK,CACR,OAAQ,8BACR,KAAM,CACF,IAAK,EAAI,GACb,EACA,SAAU,SAAU,EAAG,CACnB,QAAQ,IAAI,CAAC,CACjB,CACJ,CAAC,CACL,CAAC,GAGb,CAAC",
+  "names": []
+}

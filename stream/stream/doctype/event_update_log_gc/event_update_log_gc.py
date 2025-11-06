@@ -7,7 +7,6 @@ from frappe import _
 from frappe.model import no_value_fields, table_fields
 from frappe.model.document import Document
 from frappe.utils.background_jobs import get_jobs
-from stream.api import copy_creation_of_consumer_site
 
 class EventUpdateLogGC(Document):
 	def after_insert(self):
@@ -20,65 +19,6 @@ class EventUpdateLogGC(Document):
 		if not jobs or enqueued_method not in jobs[frappe.local.site]:
 			frappe.enqueue(enqueued_method, doctype=self.ref_doctype, queue="long", enqueue_after_commit=True)
 
-@frappe.whitelist()
-def sync_from_button(doc):
-	"""called via button"""
-	if isinstance(doc, str):
-		doc = frappe.parse_json(doc)
-
-	print("==============",type(doc),doc.doctype,doc.name)
-	if frappe.flags.in_install or frappe.flags.in_migrate:
-		return
-	
-	if check_doctype_has_consumers(doc.doctype):
-
-		event_consumer_details = frappe.get_all(
-			"Event Consumer Document Type GC",
-			filters={"ref_doctype": doc.doctype, "status": "Approved", "unsubscribed": 0},
-			ignore_ddl=True,
-			fields=["name","parent"]
-		)
-		if len(event_consumer_details)>0:
-			for detail in event_consumer_details:
-				site_url = detail.parent
-				print(site_url,"------------------------------------------")
-
-				api_key = frappe.db.get_value("Event Consumer GC",
-											  {"name":detail.parent},
-											  "api_key")
-				
-				generated_secret = frappe.utils.password.get_decrypted_password(
-				"Event Consumer GC", detail.parent, fieldname="api_secret"
-				)
-				
-				headers = {
-					"Accept": "application/json",
-					"Content-Type": "application/json",
-					"Authorization": "token {0}:{1}".format(api_key,generated_secret)
-					}
-				
-				response = requests.get("{0}/api/resource/{1}/{2}".format(site_url,doc.doctype,doc.name), headers=headers)
-				print(response.status_code)
-				print(response.json())
-
-				if response.status_code == 200:
-					old_data = response.json().get("data")
-					doc = frappe.get_doc(doc.doctype, doc.name)	
-					print(doc.meta.fields)
-					new_data = doc
-					print(type(old_data),type(new_data),"++++++++++++++")
-					if not doc.flags.event_update_log:
-						diff = get_update(old_data, new_data)
-						if diff:
-							doc.diff = diff
-							make_event_update_log(doc, update_type="Update")
-				
-				if response.status_code == 404:
-					doc = frappe.get_doc(doc.doctype, doc.name)
-					doc.flags.event_update_log = make_event_update_log(doc, update_type="Create")
-
-				copy_creation_of_consumer_site(doc, None)
-				frappe.msgprint("Event Update Log is Created. Please check Event Sync Log on Consumer site.",alert=True)
 
 def notify_consumers(doc, event):
 	"""called via hooks"""
@@ -135,14 +75,14 @@ def get_update(old, new, for_child=False):
 	"""
 	if not new:
 		return None
-	print(type(old),type(new),"++++++++++++++")
+	# print(type(old),type(new),"++++++++++++++")
 	out = frappe._dict(changed={}, added={}, removed={}, row_changed={})
 	for df in new.meta.fields:
 		if df.fieldtype in no_value_fields and df.fieldtype not in table_fields:
 			continue
 
 		old_value, new_value = old.get(df.fieldname), new.get(df.fieldname)
-		print(type(old_value),type(new_value),"<<<<<<<<<<<<<",df.fieldname)
+		# print(type(old_value),type(new_value),"<<<<<<<<<<<<<",df.fieldname)
 		if df.fieldtype in table_fields:
 			old_row_by_name, new_row_by_name = make_maps(old_value, new_value)
 			out = check_for_additions(out, df, new_value, old_row_by_name)

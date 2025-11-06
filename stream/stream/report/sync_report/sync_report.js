@@ -5,6 +5,18 @@
 frappe.query_reports["Sync Report"] = {
 	"filters": [
 		{
+			"fieldname": "from_date",
+			"label":__("From Date"),
+			"fieldtype": "Date",
+            "default": frappe.datetime.add_days(frappe.datetime.nowdate(), -30)
+		},
+		{
+			"fieldname": "to_date",
+			"label":__("To Date"),
+			"fieldtype": "Date",
+            "default": frappe.datetime.nowdate()
+		},
+		{
 			"fieldname": "payment_type",
 			"label":__("Payment Type"),
 			"fieldtype": "Select",
@@ -34,5 +46,12 @@ frappe.query_reports["Sync Report"] = {
 				return frappe.db.get_link_options(party_type, txt);
 			},
 		},
+		{
+			"fieldname": "found_in_gov",
+			"label": __("Found in Gov"),
+			"fieldtype": "Select",
+			"options": "\nYes\nNo",
+			"hidden":1
+		}
 	]
 };

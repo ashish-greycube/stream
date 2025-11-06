@@ -330,9 +330,9 @@ def sync(update, producer_site, event_producer, in_retry=False):
 	"""Sync the individual update"""
 	try:
 		if update.update_type == "Create":
-			creation_details = set_insert(update, producer_site, event_producer.name)
+			set_insert(update, producer_site, event_producer.name)
 		if update.update_type == "Update":
-			creation_details = set_update(update, producer_site)
+			set_update(update, producer_site)
 		if update.update_type == "Delete":
 			set_delete(update)
 		if in_retry:
@@ -404,11 +404,6 @@ def set_update(update, producer_site):
 
 		local_doc.save()
 		local_doc.db_update_all()
-	
-	return {
-		"creation" : local_doc.creation,
-		"modified" : local_doc.modified
-	}
 
 
 def update_row_removed(local_doc, removed):

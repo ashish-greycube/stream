@@ -9,7 +9,7 @@ $(document).on("form-refresh", function (event, frm) {
             frm.add_custom_button(__("Sync"), function() {
                 console.log("Sync")
                 frappe.call({
-                    method: "stream.stream.doctype.event_update_log_gc.event_update_log_gc.sync_from_button",
+                    method: "stream.api.sync_from_button",
                     args: {
                         doc: frm.doc
                     },

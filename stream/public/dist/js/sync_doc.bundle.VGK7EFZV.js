@@ -1,0 +1,2 @@
+(()=>{$(document).on("form-refresh",function(e,o){console.log("=====Sync======"),frappe.meta.has_field(o.doc.doctype,"custom_payment_type")&&(console.log("--------has field-----------"),o.is_new()==null&&(console.log("Inside IFFF"),o.add_custom_button(__("Sync"),function(){console.log("Sync"),frappe.call({method:"stream.api.sync_from_button",args:{doc:o.doc},callback:function(n){console.log(n)}})})))});})();
+//# sourceMappingURL=sync_doc.bundle.VGK7EFZV.js.map
