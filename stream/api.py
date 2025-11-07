@@ -1,7 +1,7 @@
 import frappe
 from frappe import _
 import requests
-# from stream.stream.doctype.event_update_log_gc.event_update_log_gc import sync_from_button
+from frappe.utils import get_link_to_form
 from stream.stream.doctype.event_update_log_gc.event_update_log_gc import check_doctype_has_consumers, get_update, make_event_update_log
 
 @frappe.whitelist()
@@ -113,21 +113,36 @@ def check_if_producer_site():
     
 @frappe.whitelist()
 def sync_doctypes(from_date, to_date):
-    doctypes_to_sync = get_doctype_to_sync()
-    print(doctypes_to_sync,"---------------")
-    from stream.stream.report.sync_report.sync_report import execute
-    unsync_data_from_sync_report = execute(filters={"from_date":from_date,"to_date":to_date,"found_in_gov":"No"})[1]
-    print(unsync_data_from_sync_report,"==============")
+    job_name = "sync_all_unsynced_doctypes_{}".format(frappe.generate_hash()[:4])
+    frappe.enqueue(sync_all_unsynced_doctypes, from_date=from_date, to_date=to_date, queue="long",job_name=job_name)
+    stream_settings = frappe.get_doc('Stream Settings')
+    stream_settings.add_comment("Comment", "To check Sync Doctype Job Status Please check <a href='{0}/app/rq-job'><b>RQ Job</b></a> with job name <b>{1}</b>".format(frappe.utils.get_url(),job_name))
 
-    if len(doctypes_to_sync)>0:
-        for doctype in doctypes_to_sync:
-            if len(unsync_data_from_sync_report)>0:
-                for row in unsync_data_from_sync_report:
-                    # print(doctype, row,"+++++")
-                    if doctype == row.doctype:
-                        doc = frappe.get_doc(doctype,row.docname)
-                        sync_from_button(doc)
+def sync_all_unsynced_doctypes(from_date, to_date):
+    try :
+        doctypes_to_sync = get_doctype_to_sync()
+        print(doctypes_to_sync,"---------------")
+        from stream.stream.report.sync_report.sync_report import execute
+        unsync_data_from_sync_report = execute(filters={"from_date":from_date,"to_date":to_date,"found_in_gov":"No"})[1]
 
+        if len(doctypes_to_sync)>0:
+            for doctype in doctypes_to_sync:
+                if len(unsync_data_from_sync_report)>0:
+                    for row in unsync_data_from_sync_report:
+                        # print(doctype, row,"+++++")
+                        if doctype == row.doctype:
+                            doc = frappe.get_doc(doctype,row.docname)
+                            sync_from_button(doc)
+
+    except Exception as e:
+        error_log=frappe.log_error(
+                title="Error : Sync All Unsynced Doctypes",
+                message=frappe.get_traceback(),
+            )
+        stream_settings = frappe.get_doc('Stream Settings')
+        stream_settings.add_comment("Comment", "Error in syncing. To check error click - {0}".format(frappe.bold(get_link_to_form("Error Log", error_log.name))))
+        frappe.db.commit()
+        frappe.throw(_("Error in syncing. <br> Please check logs with title <b>Error : Sync All Unsynced Doctypes</b>"))
 
 def get_doctype_to_sync():
     is_producer_site = check_if_producer_site()

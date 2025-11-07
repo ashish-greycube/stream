@@ -44,6 +44,26 @@
   {
    "hidden": 0,
    "is_query_report": 0,
+   "label": "Stream Settings",
+   "link_count": 0,
+   "link_to": "Stream Settings",
+   "link_type": "DocType",
+   "onboard": 0,
+   "type": "Link"
+  },
+  {
+   "hidden": 0,
+   "is_query_report": 1,
+   "label": "Sync Report",
+   "link_count": 0,
+   "link_to": "Sync Report",
+   "link_type": "Report",
+   "onboard": 0,
+   "type": "Link"
+  },
+  {
+   "hidden": 0,
+   "is_query_report": 0,
    "label": "Consumer",
    "link_count": 2,
    "link_type": "DocType",
@@ -71,7 +91,7 @@
    "type": "Link"
   }
  ],
- "modified": "2025-10-16 13:49:15.056425",
+ "modified": "2025-11-07 07:12:01.214902",
  "modified_by": "Administrator",
  "module": "Stream",
  "name": "Stream",
