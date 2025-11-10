@@ -120,15 +120,12 @@ doc_events = {
 	"*": {
 		"after_insert": [
             "stream.stream.doctype.event_update_log_gc.event_update_log_gc.notify_consumers",
-            "stream.api.copy_creation_of_consumer_site"
         ],
 		"on_update": [
 			"stream.stream.doctype.event_update_log_gc.event_update_log_gc.notify_consumers",
-            "stream.api.copy_creation_of_consumer_site"
 		],
         "on_update_after_submit": [
 			"stream.stream.doctype.event_update_log_gc.event_update_log_gc.notify_consumers",
-            "stream.api.copy_creation_of_consumer_site"
 		],
 		"on_cancel": [
 			"stream.stream.doctype.event_update_log_gc.event_update_log_gc.notify_consumers"

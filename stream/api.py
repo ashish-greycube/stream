@@ -34,7 +34,7 @@ def sync_from_button(doc):
 				generated_secret = frappe.utils.password.get_decrypted_password(
 				"Event Consumer GC", detail.parent, fieldname="api_secret"
 				)
-				
+				print(generated_secret,"secret==================")
 				headers = {
 					"Accept": "application/json",
 					"Content-Type": "application/json",
@@ -61,7 +61,7 @@ def sync_from_button(doc):
 					doc = frappe.get_doc(doc.doctype, doc.name)
 					doc.flags.event_update_log = make_event_update_log(doc, update_type="Create")
 
-				copy_creation_of_consumer_site(doc, None)
+				# copy_creation_of_consumer_site(doc, None)
 				frappe.msgprint("Event Update Log is Created. Please check Event Sync Log on Consumer site.",alert=True)
 
 def copy_creation_of_consumer_site(doc, method):
