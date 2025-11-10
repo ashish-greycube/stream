@@ -172,7 +172,7 @@ class EventProducerGC(Document):
 						hidden=1,
 						read_only=1,
 						print_hide=1,
-						allow_on_submit=1,
+						# allow_on_submit=1,
 						is_custom_field=1,
 						is_system_generated=0,
 						no_copy=1
@@ -330,14 +330,30 @@ def sync(update, producer_site, event_producer, in_retry=False):
 	"""Sync the individual update"""
 	try:
 		if update.update_type == "Create":
-			set_insert(update, producer_site, event_producer.name)
+			creation_details = set_insert(update, producer_site, event_producer.name)
 		if update.update_type == "Update":
-			set_update(update, producer_site)
+			creation_details = set_update(update, producer_site)
 		if update.update_type == "Delete":
 			set_delete(update)
 		if in_retry:
 			return "Synced"
 		log_event_sync(update, event_producer.name, "Synced")
+
+		print(producer_site, producer_site.url,"==================")
+		url ="{0}/api/method/stream.api.test_copy".format(producer_site.url)
+		headers = {
+			"Accept": "application/json",
+			"Content-Type": "application/json",
+			"Authorization": "token {0}:{1}".format(event_producer.api_key,event_producer.get_password('api_secret'))
+		}
+		payload = {
+			"latest_modified":"{0}".format(creation_details.get("modified")),
+			"creation":"{0}".format(creation_details.get("creation")),
+			"doctype":update.ref_doctype,
+			"docname":update.docname
+			}
+		response = requests.put(url, headers=headers, json=payload)
+		frappe.log_error(title="Stream : update",message="{0}-----{1}".format(response.status_code,response.text))
 
 	except Exception:
 		if in_retry:
@@ -404,7 +420,10 @@ def set_update(update, producer_site):
 
 		local_doc.save()
 		local_doc.db_update_all()
-
+	return {
+		"creation" : local_doc.creation,
+		"modified" : local_doc.modified
+	}
 
 def update_row_removed(local_doc, removed):
 	"""Sync child table row deletion type update"""

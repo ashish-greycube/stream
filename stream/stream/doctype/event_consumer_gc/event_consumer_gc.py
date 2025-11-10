@@ -89,7 +89,7 @@ class EventConsumerGC(Document):
 							options="\nBank\nCash",
 							read_only=0,
 							print_hide=1,
-							allow_on_submit=1,
+							# allow_on_submit=1,
 							is_custom_field=1,
 							is_system_generated=0,
 							no_copy=1

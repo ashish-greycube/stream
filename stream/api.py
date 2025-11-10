@@ -65,7 +65,6 @@ def sync_from_button(doc):
 				frappe.msgprint("Event Update Log is Created. Please check Event Sync Log on Consumer site.",alert=True)
 
 def copy_creation_of_consumer_site(doc, method):
-    # print("*"*100)
     is_producer_site = check_if_producer_site()
     if is_producer_site == True:
         # if check_doctype_has_consumers(doc.doctype):
@@ -159,3 +158,8 @@ def get_doctype_to_sync():
         return doctype_list
     else:
         return []
+    
+@frappe.whitelist() 
+def test_copy(latest_modified,creation,doctype, docname):
+    frappe.db.set_value(doctype, docname, "custom_gov_modified",latest_modified,update_modified=False)
+    frappe.db.set_value(doctype, docname, "custom_gov_creation",creation,update_modified=False)
