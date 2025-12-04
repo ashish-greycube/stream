@@ -340,20 +340,21 @@ def sync(update, producer_site, event_producer, in_retry=False):
 		log_event_sync(update, event_producer.name, "Synced")
 
 		print(producer_site, producer_site.url,"==================")
-		url ="{0}/api/method/stream.api.test_copy".format(producer_site.url)
-		headers = {
-			"Accept": "application/json",
-			"Content-Type": "application/json",
-			"Authorization": "token {0}:{1}".format(event_producer.api_key,event_producer.get_password('api_secret'))
-		}
-		payload = {
-			"latest_modified":"{0}".format(creation_details.get("modified")),
-			"creation":"{0}".format(creation_details.get("creation")),
-			"doctype":update.ref_doctype,
-			"docname":update.docname
+		if update.update_type != "Delete" :
+			url ="{0}/api/method/stream.api.test_copy".format(producer_site.url)
+			headers = {
+				"Accept": "application/json",
+				"Content-Type": "application/json",
+				"Authorization": "token {0}:{1}".format(event_producer.api_key,event_producer.get_password('api_secret'))
 			}
-		response = requests.put(url, headers=headers, json=payload)
-		frappe.log_error(title="Stream : update",message="{0}-----{1}".format(response.status_code,response.text))
+			payload = {
+				"latest_modified":"{0}".format(creation_details.get("modified")),
+				"creation":"{0}".format(creation_details.get("creation")),
+				"doctype":update.ref_doctype,
+				"docname":update.docname
+				}
+			response = requests.put(url, headers=headers, json=payload)
+			frappe.log_error(title="Stream : update",message="{0}-----{1}".format(response.status_code,response.text))
 
 	except Exception:
 		if in_retry:
